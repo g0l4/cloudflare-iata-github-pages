@@ -1,0 +1,56 @@
+name: Fetch from LufsX/Cloudflare-Data-Center-IATA-Code-list
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout g0l4/cf-iata-gh-pages
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Checkout LufsX/Cloudflare-Data-Center-IATA-Code-list
+        uses: actions/checkout@v4
+        with:
+          repository: "LufsX/Cloudflare-Data-Center-IATA-Code-list"
+          fetch-depth: 1
+          path: "origin"
+
+      - name: Update English list from origin
+        run: |
+          cat origin/cloudflare-iata.json | tail -n +2 | sed '$d' | sed -s 's/ //g' | sed -s 's/:.*//g' | sed -s 's/"//g' | while read item; do
+            jq .$item < origin/cloudflare-iata.json | sed -s 's/"//g' > en/$item
+          done
+
+      - name: Update Chinese list from origin
+        run: |
+          cat origin/cloudflare-iata-zh.json | tail -n +2 | sed '$d' | sed -s 's/ //g' | sed -s 's/:.*//g' | sed -s 's/"//g' | while read item; do
+            jq .$item < origin/cloudflare-iata.json | sed -s 's/"//g' > zh/$item
+          done
+
+      - name: Commit and Push
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          git rev-parse HEAD
+
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "No changes found"
+            exit 0
+          else
+            echo "Changes detected, committing"
+            git status --short
+            git commit -m "update: node info on $(date +'%Y-%m-%d') (origin $(git --git-dir origin/.git rev-parse HEAD))"
+            git push origin "${CURRENT_BRANCH}"
+          fi
