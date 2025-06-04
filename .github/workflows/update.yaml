@@ -33,7 +33,7 @@ jobs:
       - name: Update Chinese list from origin
         run: |
           cat origin/cloudflare-iata-zh.json | tail -n +2 | sed '$d' | sed -s 's/ //g' | sed -s 's/:.*//g' | sed -s 's/"//g' | while read item; do
-            jq .$item < origin/cloudflare-iata.json | sed -s 's/"//g' > zh/$item
+            jq .$item < origin/cloudflare-iata-zh.json | sed -s 's/"//g' > zh/$item
           done
 
       - name: Commit and Push
