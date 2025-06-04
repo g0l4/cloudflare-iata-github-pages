@@ -50,7 +50,6 @@ jobs:
             exit 0
           else
             echo "Changes detected, committing"
-            git status --short
             git commit -m "update: node info on $(date +'%Y-%m-%d') (origin $(git --git-dir origin/.git rev-parse HEAD))"
-            git push origin "${CURRENT_BRANCH}"
+            git push origin main
           fi
